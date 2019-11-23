@@ -1,6 +1,9 @@
-//TODO not this
-//Make a server runnable that handles client interactions beyond the connection
-//Make client runnabable that handles client commands and such (See comments for UML)
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class ChattyClientRunnable implements Runnable {
     protected double timeoutCounter;
