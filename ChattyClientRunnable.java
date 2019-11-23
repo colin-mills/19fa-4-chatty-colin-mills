@@ -2,14 +2,14 @@
 //Make a server runnable that handles client interactions beyond the connection
 //Make client runnabable that handles client commands and such (See comments for UML)
 
-public class ChattyThread implements Thread {
+public class ChattyClientRunnable implements Runnable {
     protected double timeoutCounter;
 
-    ChattyThread() {
+    ChattyClientRunnable() {
 
     }// END ChattyThread()
-
-    public void start() {
+    @Overide
+    public void run() {
 
     }//END start
-}//END ChattyThread
+}//END ChattyClientRunnable
