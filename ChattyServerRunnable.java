@@ -8,18 +8,21 @@ import java.io.InputStreamReader;
 public class ChattyServerRunnable implements Runnable {
     protected Socket socket;
     protected String clientName;
-    protected ChattyChatChat
+    protected ChattyChatChat server;
+    protected BufferedReader in;
+    protected PrintWriter socketOut;
 
     ChattyServerRunnable(Socket sock, ChattyChatChatServer myServer) {
         socket = sock;
         clientName = "";
+        server = myServer;
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        socketOut = new PrintWriter(socket.getOutputStream(), true);
     }// END ChattyServerRunnable()
 
     @Overide
     public void run() {
         boolean done = false;
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
 
         while(!done) {
             try {
@@ -34,10 +37,10 @@ public class ChattyServerRunnable implements Runnable {
                     this.setNickName(parsedResponse);
                 }//END nickname
                 else if (parsedResponse[0] == "/dm") {
-                    this.sendDM(parsedResponse, socketOut);
+                    this.sendDM(parsedResponse);
                 }//END DM
                 else { //This is just a normal message
-                    this.sendNormal(parsedResponse, socketOut);
+                    this.sendNormal(parsedResponse);
                 }//END normal
             }//END try
             catch (Exception e) {
@@ -55,17 +58,30 @@ public class ChattyServerRunnable implements Runnable {
 
     public void setNickName(String[] parsedResponse) {
         clientName = parsedResponse[1];
+    }//END setNickName
 
+    public void sendDM(String[] parsedResponse) {
+        String name = parsedResponse[1];
+        String message = "";
+        for (int i = 1; i < parsedResponse.length(); i++) {
+            message += parsedResponse[i];
+        }//END for loop message
+        server.findDM(name, message);
+    }//END sendDM
+
+    public void sendNormal(String[] parsedResponse) {
+        String message = "";
+        for (int i = 0; i < parsedResponse.length(); i++) {
+            message += parsedResponse[i];
+        }//END for loop message
+        server.sendAll(message);
+    }//END sendNormal
+
+    public void sendMessage(string message) {
+        socketOut.println(message);
+    }//END send message
+
+    public String getClientName() {
+        return clientName;
     }//END
-
-    public void sendDM(String[] parsedResponse, PrintWriter socketOut) {
-
-    }//END
-
-    public void sendNormal(String[] parsedResponse, PrintWriter socketOut) {
-
-    }//END
-
-
-
 }//END ChattyThread

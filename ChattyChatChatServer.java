@@ -45,8 +45,7 @@ public class ChattyChatChatServer {
 
         try {
             portListener = new ServerSocket(portNumber);
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
             System.out.println("Error establishing listener");
             runServer = false;
         }//END Socket error
@@ -55,16 +54,15 @@ public class ChattyChatChatServer {
             runServer = false;
         }//END unkown error
 
-        while(runServer) {
+        while (runServer) {
             Socket socket = null;
             try {
                 socket = portListener.accept();
-                this.startNewRun(socket, server.clientNumber);
+                this.startNewRun(socket, server.clientNumber, server);
                 server.addClient();
                 //BufferedReader in = new BufferedReader( new InputStreamReader(socket.getInputStream()));
                 //String response = in.readLine();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 System.out.println("Error establishing socket");
                 runServer = false;
             }//END IO error
@@ -72,20 +70,19 @@ public class ChattyChatChatServer {
                 System.out.println("Unknown error establishing socket");
                 runServer = false;
             }//END unkown error
-            finally {
+        }//END while loop
+        try {
+            System.out.println("Closing connection")
+        }
+        finally {
                 try {
                     //socket.close();
-                    //portListener.close();
-            }//END try close
-                catch (Exception e) {
+                    portListener.close();
+                }//END try close
+                catch (Exception e) {/* Nothing */}//END catch close exception
+        }//END Finally
 
-                }//END catch close exception
-
-        }//END whileServer loop
-
-
-
-    }//END main
+    }END main
 
     /**
      *
@@ -93,7 +90,7 @@ public class ChattyChatChatServer {
     public void startNewThread(Socket socket, int clientNum, ChattyChatChatServer serv) {
         Runnable serverRun = new ChattyServerRunnable(socket, serv);
         myThread[clientNum] = new Thread(serverRun);
-        myThread[clientNumber].start();
+        myThread[clientNum].start();
     }//END newRun
 
     public void setPortNumber(int port) {
@@ -102,7 +99,21 @@ public class ChattyChatChatServer {
 
     public void addClient() {
         this.clientNumber = clientNumber + 1;
-        }//END add client
+    }//END add client
 
+    public void findDM(String name, String message) {
+        for (int i = 0; i < this.myThreads.length(); i++) {
+            if (name == this.myThreads[i].getClientName()) {
+                this.myThreads[i].sendMessage(message);
+            }//END if matching name
 
-}
+        }//END for loop
+    }//END findDM
+
+    public void sendAll(String message) {
+        for (int i = 0; i < this.myThreads.length(); i++) {
+                this.myThreads[i].sendMessage(message);
+        }//END iterating through all threads
+    }//END send message
+
+}//END Chatty
