@@ -1,3 +1,6 @@
+import java.net.ServerSocket;
+import java.net.Socket;
+
 public class ChattyChatChatServer {
 
     protected String portNumber;
@@ -22,6 +25,9 @@ public class ChattyChatChatServer {
      * @param args command line arguments given by user
      */
     public static void main(String[] args) {
+        //TODO setportNum mutator fxn
+        portNumber = 10071
+        ServerSocket portListener = new ServerSocket(portNumber);
 
     }//END main
 
