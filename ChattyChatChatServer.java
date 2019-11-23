@@ -1,5 +1,8 @@
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 
 public class ChattyChatChatServer {
 
@@ -16,7 +19,8 @@ public class ChattyChatChatServer {
      * @param filename the file containing the definitions of the shapes
      */
     ChattyChatChatServer(String portNum, String servName) {
-
+        portNumber = portNum;
+        serverName = servName;
     }//END ChattyChatChat(portNum, ServNaMe)
 
 
@@ -25,9 +29,48 @@ public class ChattyChatChatServer {
      * @param args command line arguments given by user
      */
     public static void main(String[] args) {
-        //TODO setportNum mutator fxn
-        portNumber = 10071
-        ServerSocket portListener = new ServerSocket(portNumber);
+        ServerSocket portListener = null;
+        boolean runServer = true;
+
+        //TODO take portNumber as command line arg
+        ChattyChatChatServer server = new ChattyChatChatServer(10071, "localhost");
+
+        try {
+            portListener = new ServerSocket(server.portNumber);
+        }
+        /*catch (SocketException e) {
+            System.out.println("Error establishing listener");
+            runServer = false;
+        }//END IO error */
+        catch (Exception e) {
+            System.out.println("Unknown error establishing listener");
+            runServer = false;
+        }//END unkown error
+
+        while(runServer) {
+            Socket socket = null;
+            try {
+                socket = portListener.accept();
+                BufferedReader in = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+                String response = in.readLine();
+            }
+            catch (IOException e) {
+                System.out.println("Error establishing socket");
+                runServer = false;
+            }//END IO error
+            catch (Exception e) {
+                System.out.println("Unknown error establishing socket");
+                runServer = false;
+            }//END unkown error
+            finally {
+                try {
+                    socket.close();
+            }//END try close
+                catch (Exception e) {
+
+                }//END catch close exception
+
+        }//END whileServer loop
 
     }//END main
 
@@ -38,7 +81,7 @@ public class ChattyChatChatServer {
      * are from the shapes list
      * @return the sum of the shapes' areas
      */
-    public void clientHandler() {
+    public void handleClient() {
 
     }//End clientHandler
 
@@ -49,12 +92,16 @@ public class ChattyChatChatServer {
      * are from the shapes list
      * @return the sum of the shapes' perimeters
      */
-    public void newThread(Runnable myRun) {
+    public void startNewThread(Runnable myRun) {
 
     }//END newThread
 
-    public void newRun() {
+    public void startNewRun() {
 
     }//END newRun
+
+    public void setPortNumber(String port) {
+        portNumber = port;
+    }//END setPortNumber
 
 }
