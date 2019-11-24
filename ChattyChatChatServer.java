@@ -22,13 +22,16 @@ public class ChattyChatChatServer {
         int intPort = Integer.parseInt(stringPort);
         Socket socket = null;
         ClientList list = new ClientList();
+        BufferedReader readerIn = new BufferedReader(new InputStreamReader(System.in));
+        String serverSideInput = "";
 
         try {
+            System.out.println("Binding to port " + stringPort + " If you wish to terminate type \"exit\"");
             portListener = new ServerSocket(intPort);
         } catch (IOException e) {
             System.out.println("Error establishing listener");
             runServer = false;
-        }//END Socket error
+        }//END IO error
         catch (Exception e) {
             System.out.println("Unknown error establishing listener");
             runServer = false;
@@ -37,6 +40,7 @@ public class ChattyChatChatServer {
         while (runServer) {
             try {
                 socket = portListener.accept();
+                System.out.println("Handling a new client... passing them to their own thread.");
                 new Thread(new ChattyServerRunnable(socket, list)).start();
             } catch (IOException e) {
                 System.out.println("Error establishing socket");
@@ -46,6 +50,18 @@ public class ChattyChatChatServer {
                 System.out.println("Unknown error establishing socket");
                 runServer = false;
             }//END unknown error
+
+            try {
+                serverSideInput = readerIn.readLine();
+
+                if (serverSideInput.equals("exit") || serverSideInput.equals("Exit")) {
+                    runServer = false;
+                }//END if exit
+            } catch (IOException e) {
+                System.out.println("Error with server side input");
+            }
+
+
         }//END while loop
         try {
             System.out.println("Closing connection");
@@ -100,7 +116,7 @@ public class ChattyChatChatServer {
 
         public void sendDM(String name, String msg) {
             for(Client c: clientList) {
-                if(name == c.getNickName()) {
+                if(name.equals(c.getNickName())) {
                     c.sendMsg(msg);
                 }//END if
             }//END for Client
