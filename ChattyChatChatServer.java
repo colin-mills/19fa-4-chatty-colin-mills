@@ -128,14 +128,13 @@ public class ChattyChatChatServer {
     public static class ChattyServerRunnable implements Runnable {
         protected Socket socket;
         protected BufferedReader in;
-        protected PrintWriter socketOut;
         protected Client myClient;
         protected ClientList list;
 
         ChattyServerRunnable(Socket sock, ClientList list) {
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                socketOut = new PrintWriter(socket.getOutputStream(), true);
+                PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
                 socket = sock;
                 myClient = new Client(socketOut);
                 list.addClient(myClient);

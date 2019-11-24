@@ -6,24 +6,7 @@ import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 public class ChattyChatChatClient {
-
-    protected String name;
-
-    /**
-
-     */
-    ChattyChatChatClient() {
-
-    }//END ChattyChatChat()
-
-    /**
-
-     */
-    ChattyChatChatClient(String nickName) {
-
-    }//END ChattyChatChat(nickName)
-
-
+    
     /**
 
      */
