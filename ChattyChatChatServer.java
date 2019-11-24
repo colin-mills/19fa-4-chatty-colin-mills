@@ -32,7 +32,7 @@ public class ChattyChatChatServer {
         catch (Exception e) {
             System.out.println("Unknown error establishing listener");
             runServer = false;
-        }//END unknown error
+        }/* END unknown error */
 
         while (runServer) {
             try {

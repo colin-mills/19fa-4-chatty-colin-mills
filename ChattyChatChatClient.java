@@ -27,17 +27,16 @@ public class ChattyChatChatClient {
      */
     public static void main(String[] args) {
         //Todo accept variables as command line arguments
-        string hostName = "localhost";
+        String hostName = "localhost";
         int port = 10071;
         Socket socket = null;
-        runServer = true;
+        boolean runServer = true;
+        BufferedReader readerIn = new BufferedReader(new InputStreamReader(System.in));
 
         while (runServer) {
             try {
                 socket = new Socket(hostName, port);
-                String userInput = userin.readLine(); //Gets user input
-                //BufferedReader in = new BufferedReader( new InputStreamReader(System.in));
-                //String response = in.readLine();
+                String userInput = readerIn.readLine(); //Gets user input
             } catch (IOException e) {
                 System.out.println("Error connecting to server");
                 runServer = false;
@@ -63,7 +62,7 @@ public class ChattyChatChatClient {
     /**
 
      */
-    public void setNickName(myName) {
+    public void setNickName(String myName) {
 
     }//End setNickName
 
@@ -81,5 +80,17 @@ public class ChattyChatChatClient {
     public void exit() {
 
     }//END exit()
+
+    public static class ChattyClientRunnable implements Runnable {
+        protected double timeoutCounter;
+
+        ChattyClientRunnable() {
+
+        }// END ChattyThread()
+        @Override
+        public void run() {
+
+        }//END start
+    }//END ChattyClientRunnable
 
 }
