@@ -1,34 +1,15 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.util.Vector;
+
+//import java.io.IOException.SocketException;
 
 
 public class ChattyChatChatServer {
-
-    protected int portNumber;
-    //protected String serverName;
-    protected int clientNumber;
-    protected Thread[] myThreads;
-
-    ChattyChatChatServer() {
-        portNumber = 0;
-        clientNumber = 0;
-        //serverName = "localhost";
-        myThreads = null;
-    }//ChattyDefault
-
-    /**
-     */
-    ChattyChatChatServer(String portNum, String servName) {
-        portNumber = portNum;
-        //serverName = servName;
-        clientNumber = 0;
-        myThreads = null;
-    }//END ChattyChatChat(portNum, ServNaMe)
-
 
     /**
      *
@@ -39,29 +20,24 @@ public class ChattyChatChatServer {
         boolean runServer = true;
         String stringPort = args[0];
         int intPort = Integer.parseInt(stringPort);
-        this.setPortNumber(intPort);
-
-        ChattyChatChatServer server = new ChattyChatChatServer(intPort) //, "localhost");
+        Socket socket = null;
+        ClientList list = new ClientList();
 
         try {
-            portListener = new ServerSocket(portNumber);
-        } catch (SocketException e) {
+            portListener = new ServerSocket(intPort);
+        } catch (IOException e) {
             System.out.println("Error establishing listener");
             runServer = false;
         }//END Socket error
         catch (Exception e) {
             System.out.println("Unknown error establishing listener");
             runServer = false;
-        }//END unkown error
+        }//END unknown error
 
         while (runServer) {
-            Socket socket = null;
             try {
                 socket = portListener.accept();
-                this.startNewRun(socket, server.clientNumber, server);
-                server.addClient();
-                //BufferedReader in = new BufferedReader( new InputStreamReader(socket.getInputStream()));
-                //String response = in.readLine();
+                new Thread(new ChattyServerRunnable(socket, list)).start();
             } catch (IOException e) {
                 System.out.println("Error establishing socket");
                 runServer = false;
@@ -69,51 +45,137 @@ public class ChattyChatChatServer {
             catch (Exception e) {
                 System.out.println("Unknown error establishing socket");
                 runServer = false;
-            }//END unkown error
+            }//END unknown error
         }//END while loop
         try {
-            System.out.println("Closing connection")
+            System.out.println("Closing connection");
         }
         finally {
                 try {
-                    //socket.close();
                     portListener.close();
                 }//END try close
                 catch (Exception e) {/* Nothing */}//END catch close exception
         }//END Finally
 
-    }END main
+    }//END main
 
-    /**
-     *
-     */
-    public void startNewThread(Socket socket, int clientNum, ChattyChatChatServer serv) {
-        Runnable serverRun = new ChattyServerRunnable(socket, serv);
-        myThread[clientNum] = new Thread(serverRun);
-        myThread[clientNum].start();
-    }//END newRun
+    public static class Client {
+        protected String nickName;
+        protected PrintWriter socketOut;
 
-    public void setPortNumber(int port) {
-        portNumber = port;
-    }//END setPortNumber
+        Client(PrintWriter out) {
+            nickName = " ";
+            socketOut = out;
+        } //END constructor
 
-    public void addClient() {
-        this.clientNumber = clientNumber + 1;
-    }//END add client
+        public void setNickName (String newName) {
+            nickName = newName;
+        }//END setNickName
 
-    public void findDM(String name, String message) {
-        for (int i = 0; i < this.myThreads.length(); i++) {
-            if (name == this.myThreads[i].getClientName()) {
-                this.myThreads[i].sendMessage(message);
-            }//END if matching name
+        public String getNickName() {
+            return nickName;
+        }//END get NickName
 
-        }//END for loop
-    }//END findDM
+        public void sendMsg (String msg) {
+            socketOut.println(msg);
+        }//END sendMsg
+    } //END Client
 
-    public void sendAll(String message) {
-        for (int i = 0; i < this.myThreads.length(); i++) {
-                this.myThreads[i].sendMessage(message);
-        }//END iterating through all threads
-    }//END send message
+    public static class ClientList {
+        protected Vector<Client> clientList;
+
+        ClientList() {
+            clientList = new Vector<>();
+        }//END constructor
+
+        public void addClient(Client newClient) {
+            clientList.add(newClient);
+        }//END addClient
+
+        public void sendPublic(String msg) {
+            for(Client c: clientList) {
+                c.sendMsg(msg);
+            }//END for Client
+        }//END sendPublic
+
+        public void sendDM(String name, String msg) {
+            for(Client c: clientList) {
+                if(name == c.getNickName()) {
+                    c.sendMsg(msg);
+                }//END if
+            }//END for Client
+        }//END send DM
+
+    }//END ClientList
+
+    public static class ChattyServerRunnable implements Runnable {
+        protected Socket socket;
+        protected BufferedReader in;
+        protected PrintWriter socketOut;
+        protected Client myClient;
+        protected ClientList list;
+
+        ChattyServerRunnable(Socket sock, ClientList list) {
+            try {
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                socketOut = new PrintWriter(socket.getOutputStream(), true);
+                socket = sock;
+                myClient = new Client(socketOut);
+                list.addClient(myClient);
+                this.list = list;
+            }//END try
+            catch (IOException e) {
+                System.out.println("Error establishing client server connection in runnable thread");
+            }//
+        }// END ChattyServerRunnable()
+
+        @Override
+        public void run() {
+
+            boolean done = false;
+
+            while(!done) {
+                try {
+                    String response = in.readLine();
+
+                    String[] parsedResponse = response.split(" ");
+
+                    if (parsedResponse[0] == "/quit") {
+                        done = true;
+                    }//END quit
+                    else if (parsedResponse[0] == "/nick") {
+                        myClient.setNickName(parsedResponse[1]);
+                    }//END nickname
+                    else if (parsedResponse[0] == "/dm") {
+                        String name = parsedResponse[1];
+                        String message = "";
+                        for (int i = 1; i < parsedResponse.length; i++) {
+                            message += parsedResponse[i];
+                        }//END for
+                        list.sendDM(name, message);
+                    }//END DM
+                    else { //This is just a normal message
+                        String message = "";
+                        for (int i = 1; i < parsedResponse.length; i++) {
+                            message += parsedResponse[i];
+                        }//END for
+                        list.sendPublic(message);
+                    }//END normal
+                }//END try
+                catch (Exception e) {
+                    System.out.println("Unknown error from ChattyServerRunnable");
+                    done = true;
+                }//END unknown error
+                finally {
+                    try {
+                        socket.close();
+                    }//END try close
+                    catch (Exception e) {/*Nothing*/}
+                }//END finally
+            }//END while !done
+        }//END run()
+
+    }//END ChattyThread
 
 }//END Chatty
+
