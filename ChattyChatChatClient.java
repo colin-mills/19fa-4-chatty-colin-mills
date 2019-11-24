@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 public class ChattyChatChatClient {
-    
+
     /**
 
      */
@@ -20,15 +20,21 @@ public class ChattyChatChatClient {
         BufferedReader readerIn = null;
         BufferedReader serverIn = null;
         PrintStream socketOut = null;
+        Thread clientThread = null;
+        Runnable clientRun = null;
 
         try {
             socket = new Socket(hostName, port);
-            userInput = readerIn.readLine(); //Gets user input
+            System.out.println("Connection successful, Type \"/quit\" to quit, \"dm\" followed by a name and message to dm, or just a message for all.");
             readerIn = new BufferedReader(new InputStreamReader(System.in));
             serverIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             socketOut = new PrintStream(socket.getOutputStream(), true);
 
-            new Thread(new ChattyClientRunnable(serverIn)).start();
+            clientRun = new ChattyClientRunnable(serverIn);
+            clientThread = new Thread(clientRun);
+            clientThread.start();
+            System.out.println("Listening for messages from the server on another thread");
+
             while (runServer) {
                 userInput = readerIn.readLine();
                 parsedInput = userInput.split(" ");
@@ -39,14 +45,19 @@ public class ChattyChatChatClient {
                 }//END if
 
                 socketOut.println(userInput);
+                //System.out.println("Sent: " + userInput);
 
             }//END while (runServer)
         }
         catch (IOException e) {
             System.out.println("Error connecting to server");
+            System.out.println(e.fillInStackTrace());
+            System.out.println(e.getCause());
         }//End can't connect to server
         catch (Exception e) {
             System.out.println("Unknown Error connecting to server");
+            System.out.println(e.fillInStackTrace());
+            System.out.println(e.getCause());
         }
         finally {
             try {
@@ -58,6 +69,7 @@ public class ChattyChatChatClient {
             catch (Exception e) {
 
             }//END catch close exception
+
         }//END finally
 
 
@@ -80,16 +92,18 @@ public class ChattyChatChatClient {
                 try {
                     inMessage = socketIn.readLine();
 
-                    if (!inMessage.equals(null)) {
+                    if (!(inMessage.equals(""))) {
                         System.out.println(inMessage);
                     }//END else
                 }//END try
                 catch (IOException e) {
-                    System.out.println("Connection interrupted.");
+                    System.out.println("Connection interrupted... Ending runnable.");
                     done = true;
                 }//END IO exception
                 catch (Exception e) {
                     System.out.println("Unknown error while listening to server.");
+                    System.out.println(e.fillInStackTrace());
+                    System.out.println(e.getCause());
                     done = true;
                 }//END unknown exception
 

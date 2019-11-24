@@ -24,6 +24,8 @@ public class ChattyChatChatServer {
         ClientList list = new ClientList();
         BufferedReader readerIn = new BufferedReader(new InputStreamReader(System.in));
         String serverSideInput = "";
+        Thread myThread = null;
+        Runnable myRun = null;
 
         try {
             System.out.println("Binding to port " + stringPort + " If you wish to terminate type \"exit\"");
@@ -39,19 +41,25 @@ public class ChattyChatChatServer {
 
         while (runServer) {
             try {
+                System.out.println("Ready for a new client.");
                 socket = portListener.accept();
-                System.out.println("Handling a new client... passing them to their own thread.");
-                new Thread(new ChattyServerRunnable(socket, list)).start();
+                myRun = new ChattyServerRunnable(socket, list);
+                myThread = new Thread(myRun);
+                myThread.start();
             } catch (IOException e) {
                 System.out.println("Error establishing socket");
+                System.out.println(e.fillInStackTrace());
+                System.out.println(e.getCause());
                 runServer = false;
             }//END IO error
             catch (Exception e) {
                 System.out.println("Unknown error establishing socket");
+                System.out.println(e.fillInStackTrace());
+                System.out.println(e.getCause());
                 runServer = false;
             }//END unknown error
 
-            try {
+            /*try {
                 serverSideInput = readerIn.readLine();
 
                 if (serverSideInput.equals("exit") || serverSideInput.equals("Exit")) {
@@ -59,8 +67,10 @@ public class ChattyChatChatServer {
                 }//END if exit
             } catch (IOException e) {
                 System.out.println("Error with server side input");
+                System.out.println(e.fillInStackTrace());
+                System.out.println(e.getCause());
             }
-
+*/
 
         }//END while loop
         try {
@@ -133,15 +143,17 @@ public class ChattyChatChatServer {
 
         ChattyServerRunnable(Socket sock, ClientList list) {
             try {
+                socket = sock;
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
-                socket = sock;
                 myClient = new Client(socketOut);
                 list.addClient(myClient);
                 this.list = list;
             }//END try
             catch (IOException e) {
                 System.out.println("Error establishing client server connection in runnable thread");
+                System.out.println(e.fillInStackTrace());
+                System.out.println(e.getCause());
             }//
         }// END ChattyServerRunnable()
 
@@ -150,45 +162,68 @@ public class ChattyChatChatServer {
 
             boolean done = false;
 
-            while(!done) {
+            System.out.println("Successfully passed client to their own thread. Waiting for client interaction.");
+
                 try {
-                    String response = in.readLine();
+                    String[] parsedResponse;
+                    while(!done) {
+                        String response = in.readLine();
+                        System.out.println("Received: " + response);
+                        parsedResponse = response.split(" ");
+                        //System.out.println("parsed first word: " + parsedResponse[0]);
 
-                    String[] parsedResponse = response.split(" ");
-
-                    if (parsedResponse[0] == "/quit") {
-                        done = true;
-                    }//END quit
-                    else if (parsedResponse[0] == "/nick") {
-                        myClient.setNickName(parsedResponse[1]);
-                    }//END nickname
-                    else if (parsedResponse[0] == "/dm") {
-                        String name = parsedResponse[1];
-                        String message = "";
-                        for (int i = 1; i < parsedResponse.length; i++) {
-                            message += parsedResponse[i];
-                        }//END for
-                        list.sendDM(name, message);
-                    }//END DM
-                    else { //This is just a normal message
-                        String message = "";
-                        for (int i = 1; i < parsedResponse.length; i++) {
-                            message += parsedResponse[i];
-                        }//END for
-                        list.sendPublic(message);
-                    }//END normal
+                        if (parsedResponse[0].equals("/quit")) {
+                            System.out.println("Ending connection with a client");
+                            done = true;
+                        }//END quit
+                        else if (parsedResponse[0].equals("/nick")) {
+                            System.out.println("Changing name of a client");
+                            myClient.setNickName(parsedResponse[1]);
+                        }//END nickname
+                        else if (parsedResponse[0].equals("/dm")) {
+                            String name = parsedResponse[1];
+                            String message = "";
+                            System.out.println("Sending DM to " + name);
+                            for (int i = 2; i < parsedResponse.length; i++) {
+                                if (i == 2) {
+                                    message += parsedResponse[i];
+                                }//END first time
+                                else {
+                                    message += (" " + parsedResponse[i]);
+                                }//END else
+                            }//END for
+                            list.sendDM(name, message);
+                        }//END DM
+                        else { //This is just a normal message
+                            String message = "";
+                            System.out.println("Sending message to all");
+                            for (int i = 0; i < parsedResponse.length; i++) {
+                                if (i == 0) {
+                                    message += parsedResponse[i];
+                                }//First case
+                                else {
+                                    message += (" " + parsedResponse[i]);
+                                }//End else
+                            }//END for
+                            list.sendPublic(message);
+                        }//END normal
+                    }//END while !done
                 }//END try
+                catch (IOException e) {
+                    System.out.println("Connection interrupted... Ending Thread.");
+                }//END IO exception
                 catch (Exception e) {
                     System.out.println("Unknown error from ChattyServerRunnable");
-                    done = true;
+                    System.out.println(e.fillInStackTrace());
+                    System.out.println(e.getCause());
                 }//END unknown error
                 finally {
                     try {
                         socket.close();
+                        System.out.println("Socket successfully closed.");
                     }//END try close
                     catch (Exception e) {/*Nothing*/}
                 }//END finally
-            }//END while !done
         }//END run()
 
     }//END ChattyThread
