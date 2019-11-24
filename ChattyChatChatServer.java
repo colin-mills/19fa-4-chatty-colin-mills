@@ -69,6 +69,7 @@ public class ChattyChatChatServer {
         finally {
                 try {
                     portListener.close();
+                    readerIn.close();
                 }//END try close
                 catch (Exception e) {/* Nothing */}//END catch close exception
         }//END Finally
